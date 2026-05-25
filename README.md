@@ -446,3 +446,29 @@ NLLB-1.3B
 - Ensure NLLB weights loaded correctly: `ls nllb13b_local/pytorch_model.bin`
 - Try warmup: may need more epochs for convergence
 
+---
+
+## Citation
+
+If you use KAN-MoE in your research, please cite the following paper:
+
+```bibtex
+@article{singh2025kan,
+  title={KAN-MoE: Interpretable Expert Routing for Indic Machine Translation},
+  author={Singh, Harsh Kumar and Gain, Baban and Kumar, Deepak and Ekbal, Asif},
+  journal={arXiv preprint arXiv:2501.xxxxx},
+  year={2025}
+}
+```
+
+**Plain text citation:**
+
+Singh, Harsh Kumar, Baban Gain, Deepak Kumar, and Asif Ekbal. "KAN-MoE: Interpretable Expert Routing for Indic Machine Translation." Preprint submitted to Elsevier, 2025.
+
+**Key contributions cited in the paper:**
+- KAN-based Mixture-of-Experts architecture with learnable RBF basis functions
+- RegionGate spatial conditioning using Fourier-encoded bounding-box coordinates
+- Interpretable expert routing with measurable bandwidth specialisation
+- Empirical analysis showing POS-correlated expert specialisation without supervision
+- Competitive performance on HindiVisualGenome benchmark (44.67 Test BLEU, 54.8 Challenge BLEU)
+
