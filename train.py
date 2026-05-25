@@ -60,15 +60,15 @@ from model import KANMoENLLB
 
 # ── Paths (edit these if your server layout differs) ──────────────────────────
 
-_DATA_DIR    = "/home/abhishara_iitp/Harsh/hindi-visual-genome-11"
-_NLLB13B_DIR = "/home/abhishara_iitp/Harsh/nllb13b_local"
-_RIBES       = "/home/abhishara_iitp/Harsh/RIBES.py"
-_INDIC_NLP   = "/home/abhishara_iitp/kan_nllb/indic_nlp_library"
+_DATA_DIR    = "./data"
+_NLLB13B_DIR = "./nllb13b_local"
+_RIBES       = "./RIBES.py"
+_INDIC_NLP   = "./indic_nlp_library"
 
-_WORK_DIR_HINDI   = "/home/abhishara_iitp/kan_nllb/runs/hindi"
-_WORK_DIR_BENGALI = "/home/abhishara_iitp/kan_nllb/runs/bengali"
+_WORK_DIR_HINDI   = "./runs/hindi"
+_WORK_DIR_BENGALI = "./runs/bengali"
 
-_BENGALI_DATA_DIR = "/home/abhishara_iitp/Harsh/bengali-visual-genome-10_unpacked/bengali-visual-genome-10"
+_BENGALI_DATA_DIR = "./data"
 
 
 # ── Distributed helpers ────────────────────────────────────────────────────────
