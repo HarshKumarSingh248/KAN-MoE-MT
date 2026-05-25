@@ -30,7 +30,7 @@ class CFG:
 
     epochs: int = 30
     batch_size: int = 2
-    grad_accum: int = 2
+    grad_accum: int = 4
     lr_kan: float = 3e-4
     lr_decoder: float = 1e-5
     lr_encoder: float = 1e-5
