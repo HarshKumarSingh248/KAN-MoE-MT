@@ -1,6 +1,6 @@
-# KAN-MoE-MT: Kolmogorov-Arnold Mixture-of-Experts for Visual Machine Translation
+# KAN-MoE: Interpretable Expert Routing for Indic Machine Translation
 
-KAN-MoE-MT translates English image captions into Hindi/Bengali using only the **bounding box coordinates** of the described image region — no image pixels needed at inference time. It augments a fully fine-tuned NLLB-1.3B backbone with two modules:
+KAN-MoE translates English image captions into Hindi/Bengali using only the **bounding box coordinates** of the described image region — no image pixels needed at inference time. It augments a fully fine-tuned NLLB-1.3B backbone with two modules:
 
 - **RegionGate** — encodes `(x, y, w, h)` with Fourier features, injects a spatial bias into every encoder token
 - **KAN-MoE** — 4 RBF-KAN experts with soft routing; learns to specialize without supervision
@@ -94,6 +94,73 @@ pip install huggingface-hub[cli]
 
 ---
 
+### Step 2.5 — Install Indic NLP Library (Required for Tokenization)
+
+The **Indic NLP Library** is essential for evaluation. It provides language-specific tokenization and text normalization for Hindi/Bengali, required by the WAT evaluation protocol.
+
+**Installation:**
+
+```bash
+git clone https://github.com/indicnlp/indic_nlp_library.git
+cd indic_nlp_library
+git clone https://github.com/indicnlp/indic_nlp_resources.git
+python setup.py install
+```
+
+This installs:
+- `indic_nlp.normalize` — normalizes Hindi/Bengali text (diacritics, canonicalization)
+- `indic_nlp.tokenize` — language-specific tokenization (respects scripts, splits correctly)
+
+**What it does:**
+
+The WAT evaluation protocol requires text to be tokenized using language-specific rules before BLEU computation:
+
+```python
+# Before (raw output):
+text = "नमस्ते दोस्त"
+
+# After tokenization (via Indic NLP):
+text_tokenized = "नमस्ते दोस्त"  # splits on word boundaries, respects script rules
+
+# Then BLEU is computed on tokenized version
+```
+
+**Used in:**
+- `evaluate.py` — tokenizes predictions and references before BLEU/RIBES computation
+- `data_utils.py::wat_tok()` — internal tokenization function
+
+**Verify installation:**
+
+```bash
+python -c "from indicnlp import loader; loader.load_lang('hi'); print('✓ Indic NLP loaded successfully')"
+```
+
+If you see `✓ Indic NLP loaded successfully`, you're good to go.
+
+**Troubleshooting:**
+
+If installation fails:
+```bash
+# Alternative: Install via pip
+pip install indic-nlp-library
+
+# Then download resources separately:
+cd ~/indic_nlp_library
+git clone https://github.com/indicnlp/indic_nlp_resources.git
+```
+
+Then tell `evaluate.py` where to find it:
+```bash
+python evaluate.py \
+    --lang hindi \
+    --ckpt ./runs/hindi/best_model.pt \
+    --data-dir ./data \
+    --nllb-dir ./nllb13b_local \
+    --indic-nlp ./indic_nlp_library
+```
+
+---
+
 ### Step 3 — Download the Dataset
 
 Go to: **https://ufal.mff.cuni.cz/wat2025english-indicmultimodaltranslation**
@@ -152,13 +219,19 @@ sudo apt-get install -y build-essential perl
 **Single GPU:**
 
 ```bash
-python train.py --lang hindi
+python train.py --lang hindi \
+    --data-dir ./data \
+    --nllb-dir ./nllb13b_local \
+    --indic-nlp ./indic_nlp_library
 ```
 
 **Multi-GPU (recommended, e.g. 2 GPUs):**
 
 ```bash
-torchrun --nproc_per_node=2 train.py --lang hindi
+torchrun --nproc_per_node=2 train.py --lang hindi \
+    --data-dir ./data \
+    --nllb-dir ./nllb13b_local \
+    --indic-nlp ./indic_nlp_library
 ```
 
 The script:
@@ -186,6 +259,7 @@ python evaluate.py \
     --ckpt ./runs/hindi/best_model.pt \
     --data-dir ./data \
     --nllb-dir ./nllb13b_local \
+    --indic-nlp ./indic_nlp_library \
     --splits test challenge
 ```
 
@@ -274,31 +348,3 @@ NLLB-1.3B
 - Ensure NLLB weights loaded correctly: `ls nllb13b_local/pytorch_model.bin`
 - Try warmup: may need more epochs for convergence
 
----
-
-## Citation
-
-If you use this code or results, please cite:
-
-```bibtex
-@article{yourname2024kan,
-  title={KAN-MoE: Kolmogorov-Arnold Mixture-of-Experts for Visual Machine Translation},
-  author={Your Name, ...},
-  journal={...},
-  year={2024}
-}
-```
-
----
-
-## References
-
-- NLLB-200-1.3B: https://huggingface.co/facebook/nllb-200-1.3B
-- WAT 2024 Visual Genome Task: https://ufal.mff.cuni.cz/wat2025english-indicmultimodaltranslation
-- Indic NLP: https://github.com/indicnlp/indic_nlp_library
-
----
-
-## License
-
-This code is provided as-is for research purposes.
