@@ -394,6 +394,16 @@ if __name__ == "__main__":
         "--lang", choices=["hindi", "bengali"], default="hindi",
         help="Target language (default: hindi)",
     )
+    parser.add_argument("--data-dir", type=str, default=_DATA_DIR,
+                        help=f"Path to dataset directory (default: {_DATA_DIR})")
+    parser.add_argument("--nllb-dir", type=str, default=_NLLB13B_DIR,
+                        help=f"Path to nllb13b_local directory (default: {_NLLB13B_DIR})")
+    parser.add_argument("--work-dir", type=str, default=None,
+                        help="Path to output directory (default: runs/{lang})")
+    parser.add_argument("--indic-nlp", type=str, default=_INDIC_NLP,
+                        help=f"Path to indic_nlp_library directory (default: {_INDIC_NLP})")
+    parser.add_argument("--ribes", type=str, default=_RIBES,
+                        help=f"Path to RIBES.py script (default: {_RIBES})")
     parser.add_argument("--resume-from", type=int, default=0,
                         help="Resume after this epoch (e.g. 7 resumes from epoch 8)")
     parser.add_argument("--resume-ckpt", type=str, default=None,
@@ -403,19 +413,19 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.lang == "hindi":
-        data_dir = _DATA_DIR
-        work_dir = _WORK_DIR_HINDI
+        default_work_dir = _WORK_DIR_HINDI
     else:
-        data_dir = _BENGALI_DATA_DIR
-        work_dir = _WORK_DIR_BENGALI
+        default_work_dir = _WORK_DIR_BENGALI
+
+    work_dir = args.work_dir if args.work_dir else default_work_dir
 
     cfg = get_cfg(
         lang=args.lang,
-        data_dir=data_dir,
-        nllb13b_local=_NLLB13B_DIR,
+        data_dir=args.data_dir,
+        nllb13b_local=args.nllb_dir,
         work_dir=work_dir,
-        ribes_script=_RIBES,
-        indic_nlp_dir=_INDIC_NLP,
+        ribes_script=args.ribes,
+        indic_nlp_dir=args.indic_nlp,
     )
 
     resume_ckpt = args.resume_ckpt

@@ -234,15 +234,31 @@ torchrun --nproc_per_node=2 train.py --lang hindi \
     --indic-nlp ./indic_nlp_library
 ```
 
+**Full list of training arguments:**
+
+| Argument | Default | Purpose |
+|----------|---------|---------|
+| `--lang` | hindi | Target language: `hindi` or `bengali` |
+| `--data-dir` | `./data` | Path to dataset directory |
+| `--nllb-dir` | `./nllb13b_local` | Path to NLLB-1.3B weights |
+| `--indic-nlp` | `./indic_nlp_library` | Path to Indic NLP Library |
+| `--work-dir` | `runs/{lang}` | Output directory for checkpoints |
+| `--resume-from` | 0 | Resume from epoch N (0 = start fresh) |
+| `--resume-ckpt` | None | Checkpoint file to load weights from |
+| `--best-bleu` | -1.0 | Best dev BLEU before resuming |
+
 The script:
 1. Trains for up to 30 epochs with early stopping (patience = 8 on dev BLEU)
-2. Saves the best checkpoint to `runs/hindi/best_model.pt` whenever dev BLEU improves
-3. At the end, evaluates on test + challenge and saves `runs/hindi/final_results.json`
+2. Saves the best checkpoint to `{work-dir}/best_model.pt` whenever dev BLEU improves
+3. At the end, evaluates on test + challenge and saves `{work-dir}/final_results.json`
 
 **Resume an interrupted run:**
 
 ```bash
-python train.py --lang hindi --resume-from 15 --best-bleu 42.5
+python train.py --lang hindi \
+    --data-dir ./data \
+    --nllb-dir ./nllb13b_local \
+    --resume-from 15 --best-bleu 42.5
 # --resume-from 15   resumes from epoch 16, loading runs/hindi/best_model.pt
 # --best-bleu 42.5   only overwrites checkpoint if BLEU improves beyond 42.5
 ```
