@@ -111,7 +111,7 @@ class RegionGate(nn.Module):
         return self.norm(h + bias)                              # additive residual
 
 
-class DualKANNLLB(nn.Module):
+class KANMoENLLB(nn.Module):
     """
     NLLB-1.3B + KAN-MoE + RegionGate (v2, architecture fixes).
 
@@ -123,7 +123,7 @@ class DualKANNLLB(nn.Module):
 
     Key changes vs model_nllb13b.py:
       1. RegionGate BEFORE KAN-MoE (spatial context helps expert routing).
-      2. KANMoEFusion has in_proj + residual skip + out_proj (matches original DualKAN).
+      2. KANMoEFusion has in_proj + residual skip + out_proj (matches original design).
       3. Correct Switch aux loss formula.
       4. Additive RegionGate instead of multiplicative (safer, preserves features).
       5. kan_hidden = 2048 (2x d_model) for richer expert representations.

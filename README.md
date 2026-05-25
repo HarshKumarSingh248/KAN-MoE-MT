@@ -1,4 +1,4 @@
-# DualKAN-NLLB: Visual Grounding for Hindi Machine Translation
+# KAN-MoE-NLLB: Visual Grounding for Hindi Machine Translation
 
 KAN-MoE + RegionGate fusion over NLLB-200-1.3B for Hindi Visual Genome MT.
 
@@ -6,7 +6,7 @@ KAN-MoE + RegionGate fusion over NLLB-200-1.3B for Hindi Visual Genome MT.
 
 ```
 kan_nllb/
-├── model.py        # DualKANNLLB architecture (KAN-MoE + RegionGate + NLLB-1.3B)
+├── model.py        # KAN-MoENLLB architecture (KAN-MoE + RegionGate + NLLB-1.3B)
 ├── data_utils.py   # Dataset, collate, BLEU, RIBES
 ├── config.py       # CFG dataclass
 ├── evaluate.py     # Evaluation script

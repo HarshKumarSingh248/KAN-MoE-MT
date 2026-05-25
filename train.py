@@ -1,5 +1,5 @@
 """
-train.py — Train DualKAN-NLLB (NLLB-1.3B + KAN-MoE + RegionGate) on Hindi/Bengali Visual Genome.
+train.py — Train KAN-MoE-MT (NLLB-1.3B + KAN-MoE + RegionGate) on Hindi/Bengali Visual Genome.
 
 Full finetuning — no freezing. All 2.4B params train from epoch 1 with discriminative LRs:
   KAN/RegionGate: 3e-4  |  decoder: 1e-5  |  encoder: 1e-5
@@ -55,7 +55,7 @@ from data_utils import (
     load_split, HVGDataset, make_collate_fn,
     compute_bleu, compute_ribes,
 )
-from model import DualKANNLLB
+from model import KANMoENLLB
 
 
 # ── Paths (edit these if your server layout differs) ──────────────────────────
@@ -129,7 +129,7 @@ def make_nllb_loader(df, tokenizer, cfg: CFG, split: str, distributed: bool = Fa
 # ── Inference ─────────────────────────────────────────────────────────────────
 
 @torch.no_grad()
-def generate_all(model: DualKANNLLB, tokenizer, df, cfg: CFG, device):
+def generate_all(model: KANMoENLLB, tokenizer, df, cfg: CFG, device):
     model.eval()
     dataset = HVGDataset(df)
     collate = make_collate_fn(
@@ -184,7 +184,7 @@ def run(cfg: CFG, resume_from: int = 0, resume_ckpt: str = None, best_bleu_overr
 
     if is_main(rank):
         logger.info("=" * 65)
-        logger.info("DualKAN-NLLB Training")
+        logger.info("KAN-MoE-MT Training")
         logger.info(f"  Language  : {cfg.lang}")
         logger.info(f"  Work dir  : {cfg.work_dir}")
         logger.info(f"  World size: {world_size}")
@@ -213,7 +213,7 @@ def run(cfg: CFG, resume_from: int = 0, resume_ckpt: str = None, best_bleu_overr
         logger.info(f"Train batches: {len(train_loader)}  Dev batches: {len(dev_loader)}")
 
     # ── Model (full finetune — no freezing) ───────────────────────────────
-    model = DualKANNLLB(cfg).to(device)
+    model = KANMoENLLB(cfg).to(device)
 
     if resume_ckpt and os.path.exists(resume_ckpt):
         model.load_state_dict(torch.load(resume_ckpt, map_location=device))
@@ -227,7 +227,7 @@ def run(cfg: CFG, resume_from: int = 0, resume_ckpt: str = None, best_bleu_overr
     if world_size > 1:
         model = DDP(model, device_ids=[local_rank], find_unused_parameters=True)
 
-    raw: DualKANNLLB = model.module if hasattr(model, "module") else model
+    raw: KANMoENLLB = model.module if hasattr(model, "module") else model
 
     # ── Optimizer & scheduler ─────────────────────────────────────────────
     optimizer   = torch.optim.AdamW(
@@ -379,7 +379,7 @@ def run(cfg: CFG, resume_from: int = 0, resume_ckpt: str = None, best_bleu_overr
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Train DualKAN-NLLB (NLLB-1.3B + KAN-MoE + RegionGate)."
+        description="Train KAN-MoE-MT (NLLB-1.3B + KAN-MoE + RegionGate)."
     )
     parser.add_argument(
         "--lang", choices=["hindi", "bengali"], default="hindi",

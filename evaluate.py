@@ -1,5 +1,5 @@
 """
-evaluate.py — Evaluate DualKAN-NLLB on test & challenge sets.
+evaluate.py — Evaluate KAN-MoE-MT on test & challenge sets.
 
 Usage:
     python evaluate.py \
@@ -43,7 +43,7 @@ transformers.logging.set_verbosity_error()
 
 from config import get_cfg
 from data_utils import load_split, compute_bleu, compute_ribes, HVGDataset, make_collate_fn
-from model import DualKANNLLB
+from model import KANMoENLLB
 
 logging.basicConfig(
     level=logging.INFO,
@@ -108,14 +108,14 @@ def main():
         sys.exit(1)
 
     logger.info("=" * 65)
-    logger.info(f"DualKAN-NLLB Evaluation  —  {args.lang.upper()}")
+    logger.info(f"KAN-MoE-MT Evaluation  —  {args.lang.upper()}")
     logger.info(f"Checkpoint : {args.ckpt}")
     logger.info(f"Device     : {device}")
     logger.info(f"Splits     : {args.splits}")
     logger.info("=" * 65)
 
     logger.info("Loading model ...")
-    model = DualKANNLLB(cfg).to(device)
+    model = KANMoENLLB(cfg).to(device)
     state = torch.load(args.ckpt, map_location=device)
     model.load_state_dict(state)
     model.eval()
