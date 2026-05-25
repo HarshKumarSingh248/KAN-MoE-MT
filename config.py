@@ -29,7 +29,7 @@ class CFG:
     moe_aux_wt: float = 0.05   # increased from 0.005 — fixes expert collapse (Gini 0.617 → ~0.15)
 
     epochs: int = 30
-    batch_size: int = 8
+    batch_size: int = 4
     grad_accum: int = 4
     lr_kan: float = 3e-4
     lr_decoder: float = 1e-5

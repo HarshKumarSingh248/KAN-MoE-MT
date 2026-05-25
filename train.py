@@ -410,6 +410,10 @@ if __name__ == "__main__":
                         help="Checkpoint to load weights from when resuming")
     parser.add_argument("--best-bleu", type=float, default=-1.0,
                         help="Best BLEU achieved before resuming — prevents overwriting a better checkpoint")
+    parser.add_argument("--batch-size", type=int, default=None,
+                        help="Override default batch size (default: 4, reduce if OOM)")
+    parser.add_argument("--grad-accum", type=int, default=None,
+                        help="Override default gradient accumulation steps (default: 4)")
     args = parser.parse_args()
 
     if args.lang == "hindi":
@@ -427,6 +431,11 @@ if __name__ == "__main__":
         ribes_script=args.ribes,
         indic_nlp_dir=args.indic_nlp,
     )
+
+    if args.batch_size is not None:
+        cfg.batch_size = args.batch_size
+    if args.grad_accum is not None:
+        cfg.grad_accum = args.grad_accum
 
     resume_ckpt = args.resume_ckpt
     if args.resume_from and resume_ckpt is None:
