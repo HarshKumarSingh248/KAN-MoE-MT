@@ -7,6 +7,48 @@ KAN-MoE translates English image captions into Hindi/Bengali using only the **bo
 
 ---
 
+## Quick Start (TL;DR)
+
+```bash
+# 1. Clone repo and install environment
+git clone https://github.com/HarshKumarSingh248/KAN-MoE-MT.git
+cd KAN-MoE-MT
+conda env create -f environment.yml
+conda activate kan-moe-mt
+
+# 2. Download NLLB-1.3B weights
+huggingface-cli download facebook/nllb-200-1.3B --repo-type model --local-dir nllb13b_local
+
+# 3. Install Indic NLP Library
+git clone https://github.com/indicnlp/indic_nlp_library.git
+cd indic_nlp_library
+git clone https://github.com/indicnlp/indic_nlp_resources.git
+python setup.py install
+cd ..
+
+# 4. Download dataset from WAT: https://ufal.mff.cuni.cz/wat2025english-indicmultimodaltranslation
+# Extract to ./data folder
+
+# 5. Train
+torchrun --nproc_per_node=2 train.py --lang hindi \
+    --data-dir ./data \
+    --nllb-dir ./nllb13b_local \
+    --indic-nlp ./indic_nlp_library
+
+# 6. Evaluate
+python evaluate.py \
+    --lang hindi \
+    --ckpt ./runs/hindi/best_model.pt \
+    --data-dir ./data \
+    --nllb-dir ./nllb13b_local \
+    --indic-nlp ./indic_nlp_library \
+    --splits test challenge
+```
+
+> **Note:** All paths are customizable via command-line arguments. See [Step 5 — Train](#step-5--train) for details.
+
+---
+
 ## Files in This Repo
 
 ```
@@ -216,7 +258,9 @@ sudo apt-get install -y build-essential perl
 
 ### Step 5 — Train
 
-**Single GPU:**
+All paths are **fully customizable** via command-line arguments. Use defaults if files are in repo root; override if they're elsewhere.
+
+**Single GPU (standard):**
 
 ```bash
 python train.py --lang hindi \
@@ -225,7 +269,7 @@ python train.py --lang hindi \
     --indic-nlp ./indic_nlp_library
 ```
 
-**Multi-GPU (recommended, e.g. 2 GPUs):**
+**Multi-GPU (recommended for faster training):**
 
 ```bash
 torchrun --nproc_per_node=2 train.py --lang hindi \
@@ -234,40 +278,54 @@ torchrun --nproc_per_node=2 train.py --lang hindi \
     --indic-nlp ./indic_nlp_library
 ```
 
-**Full list of training arguments:**
+**Custom paths (if files are in different locations):**
 
-| Argument | Default | Purpose |
-|----------|---------|---------|
-| `--lang` | hindi | Target language: `hindi` or `bengali` |
-| `--data-dir` | `./data` | Path to dataset directory |
-| `--nllb-dir` | `./nllb13b_local` | Path to NLLB-1.3B weights |
-| `--indic-nlp` | `./indic_nlp_library` | Path to Indic NLP Library |
-| `--work-dir` | `runs/{lang}` | Output directory for checkpoints |
-| `--resume-from` | 0 | Resume from epoch N (0 = start fresh) |
-| `--resume-ckpt` | None | Checkpoint file to load weights from |
-| `--best-bleu` | -1.0 | Best dev BLEU before resuming |
+```bash
+torchrun --nproc_per_node=2 train.py --lang hindi \
+    --data-dir /path/to/hindi-visual-genome-11 \
+    --nllb-dir /path/to/nllb13b_local \
+    --indic-nlp /path/to/indic_nlp_library \
+    --work-dir /path/to/output
+```
 
-The script:
+**All training arguments:**
+
+| Argument | Default | Example | Purpose |
+|----------|---------|---------|---------|
+| `--lang` | hindi | `hindi`, `bengali` | Target language |
+| `--data-dir` | `./data` | `/data/vg` | Dataset directory with TSV files |
+| `--nllb-dir` | `./nllb13b_local` | `/models/nllb` | NLLB-1.3B weights directory |
+| `--indic-nlp` | `./indic_nlp_library` | `/lib/indic` | Indic NLP Library directory |
+| `--work-dir` | `runs/{lang}` | `/output/hindi` | Checkpoint output directory |
+| `--resume-from` | 0 | `15` | Resume from epoch (0=fresh) |
+| `--resume-ckpt` | None | `/path/to/ckpt.pt` | Load weights from checkpoint |
+| `--best-bleu` | -1.0 | `42.5` | Best dev BLEU before resuming |
+
+**Training process:**
 1. Trains for up to 30 epochs with early stopping (patience = 8 on dev BLEU)
-2. Saves the best checkpoint to `{work-dir}/best_model.pt` whenever dev BLEU improves
-3. At the end, evaluates on test + challenge and saves `{work-dir}/final_results.json`
+2. Saves best checkpoint to `{work-dir}/best_model.pt` whenever dev BLEU improves
+3. Evaluates on test + challenge splits and saves results to `{work-dir}/final_results.json`
 
 **Resume an interrupted run:**
 
 ```bash
-python train.py --lang hindi \
+# If training was interrupted at epoch 20 with best BLEU=42.5
+torchrun --nproc_per_node=2 train.py --lang hindi \
     --data-dir ./data \
     --nllb-dir ./nllb13b_local \
-    --resume-from 15 --best-bleu 42.5
-# --resume-from 15   resumes from epoch 16, loading runs/hindi/best_model.pt
-# --best-bleu 42.5   only overwrites checkpoint if BLEU improves beyond 42.5
+    --resume-from 20 --best-bleu 42.5
 ```
+- Resumes from epoch 21
+- Only saves new checkpoint if BLEU > 42.5
+- Automatically loads `runs/hindi/best_model.pt`
 
 **Expected hardware:** ~8 hours on a single A100 80 GB GPU.
 
 ---
 
 ### Step 6 — Evaluate
+
+**Standard evaluation (default paths):**
 
 ```bash
 python evaluate.py \
@@ -278,6 +336,30 @@ python evaluate.py \
     --indic-nlp ./indic_nlp_library \
     --splits test challenge
 ```
+
+**Custom paths:**
+
+```bash
+python evaluate.py \
+    --lang hindi \
+    --ckpt /path/to/best_model.pt \
+    --data-dir /path/to/hindi-visual-genome-11 \
+    --nllb-dir /path/to/nllb13b_local \
+    --indic-nlp /path/to/indic_nlp_library \
+    --splits test challenge
+```
+
+**Evaluation arguments:**
+
+| Argument | Default | Purpose |
+|----------|---------|---------|
+| `--lang` | hindi | Target language: `hindi` or `bengali` |
+| `--ckpt` | `runs/hindi/best_model.pt` | Path to trained checkpoint |
+| `--data-dir` | `./data` | Dataset directory |
+| `--nllb-dir` | `./nllb13b_local` | NLLB-1.3B weights directory |
+| `--indic-nlp` | `./indic_nlp_library` | Indic NLP Library directory |
+| `--splits` | `test challenge` | Splits to evaluate: `dev test challenge` |
+| `--out-dir` | (repo root) | Directory to save results JSON |
 
 **Expected output:**
 
