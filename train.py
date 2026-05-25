@@ -199,11 +199,14 @@ def run(cfg: CFG, resume_from: int = 0, resume_ckpt: str = None, best_bleu_overr
         logger.info("=" * 65)
 
     # ── Tokenizer ─────────────────────────────────────────────────────────
-    # Use local path if it exists, otherwise download from HuggingFace
-    if os.path.isdir(cfg.nllb13b_local):
-        tokenizer = AutoTokenizer.from_pretrained(cfg.nllb13b_local, local_files_only=True)
-    else:
-        tokenizer = AutoTokenizer.from_pretrained("facebook/nllb-200-1.3B")
+    # Load ONLY from local files (no internet access on this server)
+    if not os.path.isdir(cfg.nllb13b_local):
+        if is_main(rank):
+            logger.error(f"ERROR: NLLB directory not found: {cfg.nllb13b_local}")
+            logger.error("Server has no internet access. Please ensure nllb13b_local exists.")
+        sys.exit(1)
+
+    tokenizer = AutoTokenizer.from_pretrained(cfg.nllb13b_local, local_files_only=True)
     tokenizer.src_lang = cfg.src_lang_nllb
     tokenizer.tgt_lang = cfg.tgt_lang_nllb
 

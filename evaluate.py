@@ -122,7 +122,7 @@ def main():
     total = sum(p.numel() for p in model.parameters())
     logger.info(f"Parameters — total: {total:,}")
 
-    tokenizer = AutoTokenizer.from_pretrained(cfg.nllb13b_local)
+    tokenizer = AutoTokenizer.from_pretrained(cfg.nllb13b_local, local_files_only=True)
     tokenizer.src_lang = cfg.src_lang_nllb
     tokenizer.tgt_lang = cfg.tgt_lang_nllb
 

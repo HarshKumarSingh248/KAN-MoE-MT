@@ -1,0 +1,15 @@
+2026-05-25 21:47:54,477  INFO  =================================================================
+2026-05-25 21:47:54,477  INFO  KAN-MoE-MT Training
+2026-05-25 21:47:54,477  INFO    Language  : hindi
+2026-05-25 21:47:54,477  INFO    Work dir  : /home/abhishara_iitp/KAN-MoE-MT/runs/hindi
+2026-05-25 21:47:54,477  INFO    World size: 2
+2026-05-25 21:47:54,477  INFO    Device    : cuda:0
+2026-05-25 21:47:54,478  INFO    Backbone  : NLLB-200-1.3B  (full finetune, no freezing)
+2026-05-25 21:47:54,478  INFO    KAN-MoE   : 4 experts, hidden=2048, basis=16
+2026-05-25 21:47:54,478  INFO    RegionGate: additive Fourier bias (before KAN-MoE)
+2026-05-25 21:47:54,478  INFO    LR        : kan=0.0003  decoder=1e-05  encoder=1e-05
+2026-05-25 21:47:54,478  INFO    Smoothing : 0.1 | beam=5 | no_repeat=3
+2026-05-25 21:47:54,478  INFO  =================================================================
+2026-05-25 21:47:59,816  INFO  Loaded train (28,930 samples) from /home/abhishara_iitp/KAN-MoE-MT/data/hindi-visual-genome-train.txt
+2026-05-25 21:47:59,847  INFO  Loaded dev (998 samples) from /home/abhishara_iitp/KAN-MoE-MT/data/hindi-visual-genome-dev.txt
+2026-05-25 21:48:00,338  INFO  Train batches: 1808  Dev batches: 125

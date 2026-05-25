@@ -132,7 +132,7 @@ class KANMoENLLB(nn.Module):
         super().__init__()
         self.cfg = cfg
 
-        self.nllb13b = AutoModelForSeq2SeqLM.from_pretrained(cfg.nllb13b_local)
+        self.nllb13b = AutoModelForSeq2SeqLM.from_pretrained(cfg.nllb13b_local, local_files_only=True)
 
         kan_hidden = cfg.kan_hidden   # set to 2048 in config for v2
         self.region_gate = RegionGate(d_model=cfg.d_model)
