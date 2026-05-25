@@ -11,7 +11,7 @@ Multi-GPU:
     torchrun --nproc_per_node=2 train.py --lang hindi
     torchrun --nproc_per_node=2 train.py --lang bengali
 
-Best model saved to: {work_dir}/best_model2.pt
+Best model saved to: {work_dir}/best_model.pt
 """
 
 # ── GLIBCXX fix: re-exec with correct LD_LIBRARY_PATH before any native libs load ──
@@ -60,15 +60,17 @@ from model import KANMoENLLB
 
 # ── Paths (edit these if your server layout differs) ──────────────────────────
 
-_DATA_DIR    = "./data"
-_NLLB13B_DIR = "./nllb13b_local"
-_RIBES       = "./RIBES.py"
-_INDIC_NLP   = "./indic_nlp_library"
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
-_WORK_DIR_HINDI   = "./runs/hindi"
-_WORK_DIR_BENGALI = "./runs/bengali"
+_DATA_DIR    = os.path.join(_HERE, "data")
+_NLLB13B_DIR = os.path.join(_HERE, "nllb13b_local")
+_RIBES       = os.path.join(_HERE, "RIBES.py")
+_INDIC_NLP   = os.path.join(_HERE, "indic_nlp_library")
 
-_BENGALI_DATA_DIR = "./data"
+_WORK_DIR_HINDI   = os.path.join(_HERE, "runs", "hindi")
+_WORK_DIR_BENGALI = os.path.join(_HERE, "runs", "bengali")
+
+_BENGALI_DATA_DIR = os.path.join(_HERE, "data")
 
 
 # ── Distributed helpers ────────────────────────────────────────────────────────
@@ -197,7 +199,11 @@ def run(cfg: CFG, resume_from: int = 0, resume_ckpt: str = None, best_bleu_overr
         logger.info("=" * 65)
 
     # ── Tokenizer ─────────────────────────────────────────────────────────
-    tokenizer = AutoTokenizer.from_pretrained(cfg.nllb13b_local)
+    # Use local path if it exists, otherwise download from HuggingFace
+    if os.path.isdir(cfg.nllb13b_local):
+        tokenizer = AutoTokenizer.from_pretrained(cfg.nllb13b_local, local_files_only=True)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained("facebook/nllb-200-1.3B")
     tokenizer.src_lang = cfg.src_lang_nllb
     tokenizer.tgt_lang = cfg.tgt_lang_nllb
 
@@ -244,7 +250,7 @@ def run(cfg: CFG, resume_from: int = 0, resume_ckpt: str = None, best_bleu_overr
     best_bleu        = best_bleu_override if best_bleu_override > 0 else -1.0
     patience_counter = 0
     history          = []
-    ckpt_path        = os.path.join(cfg.work_dir, "best_model2.pt")
+    ckpt_path        = os.path.join(cfg.work_dir, "best_model.pt")
 
     if is_main(rank) and resume_from:
         logger.info(f"Resuming from epoch {resume_from + 1}, best_bleu={best_bleu:.2f}")
@@ -325,7 +331,7 @@ def run(cfg: CFG, resume_from: int = 0, resume_ckpt: str = None, best_bleu_overr
                 best_bleu        = bleu
                 patience_counter = 0
                 torch.save(raw.state_dict(), ckpt_path)
-                logger.info(f"  → Saved best_model2.pt  (BLEU={bleu:.2f})")
+                logger.info(f"  → Saved best_model.pt  (BLEU={bleu:.2f})")
             else:
                 patience_counter += 1
                 logger.info(f"  No improvement ({patience_counter}/{cfg.patience})")
@@ -350,7 +356,7 @@ def run(cfg: CFG, resume_from: int = 0, resume_ckpt: str = None, best_bleu_overr
 
     # ── Final evaluation on test + challenge ──────────────────────────────
     if is_main(rank):
-        logger.info("Loading best_model2.pt for final evaluation ...")
+        logger.info("Loading best_model.pt for final evaluation ...")
         raw.load_state_dict(torch.load(ckpt_path, map_location=device))
 
         results = {
@@ -411,6 +417,6 @@ if __name__ == "__main__":
 
     resume_ckpt = args.resume_ckpt
     if args.resume_from and resume_ckpt is None:
-        resume_ckpt = os.path.join(work_dir, "best_model2.pt")
+        resume_ckpt = os.path.join(work_dir, "best_model.pt")
 
     run(cfg, resume_from=args.resume_from, resume_ckpt=resume_ckpt, best_bleu_override=args.best_bleu)
