@@ -441,4 +441,34 @@ if __name__ == "__main__":
     if args.resume_from and resume_ckpt is None:
         resume_ckpt = os.path.join(work_dir, "best_model.pt")
 
+    # ── Validate paths before training ─────────────────────────────────────
+    missing = []
+    if not os.path.isdir(cfg.data_dir):
+        missing.append(("data_dir", cfg.data_dir, "https://ufal.mff.cuni.cz/wat2025english-indicmultimodaltranslation"))
+    if not os.path.isdir(cfg.nllb13b_local):
+        missing.append(("nllb13b_local", cfg.nllb13b_local, "huggingface-cli download facebook/nllb-200-1.3B --repo-type model --local-dir nllb13b_local"))
+    if not os.path.isdir(cfg.indic_nlp_dir):
+        missing.append(("indic_nlp_dir", cfg.indic_nlp_dir, "git clone https://github.com/indicnlp/indic_nlp_library.git && cd indic_nlp_library && git clone https://github.com/indicnlp/indic_nlp_resources.git && python setup.py install"))
+
+    if missing:
+        print("\n" + "=" * 80)
+        print("ERROR: Required directories not found. Please set up the following:")
+        print("=" * 80 + "\n")
+        for name, path, cmd in missing:
+            print(f"  ✗ {name}  →  {path}")
+            print(f"    How to fix:")
+            if name == "data_dir":
+                print(f"      1. Visit: {cmd}")
+                print(f"      2. Download Hindi/Bengali Visual Genome dataset")
+                print(f"      3. Extract to: {path}")
+            elif name == "nllb13b_local":
+                print(f"      1. Run: {cmd}")
+                print(f"      2. Or override with: python train.py --nllb-dir /path/to/nllb13b_local")
+            elif name == "indic_nlp_dir":
+                print(f"      1. Run: {cmd}")
+                print(f"      2. Or override with: python train.py --indic-nlp /path/to/indic_nlp_library")
+            print()
+        print("=" * 80)
+        sys.exit(1)
+
     run(cfg, resume_from=args.resume_from, resume_ckpt=resume_ckpt, best_bleu_override=args.best_bleu)
