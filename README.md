@@ -29,11 +29,15 @@ cd ..
 # 4. Download dataset from WAT: https://ufal.mff.cuni.cz/wat2025english-indicmultimodaltranslation
 # Extract to ./data folder
 
+# 4.5 Download Moses decoder (for BLEU evaluation)
+git clone https://github.com/moses-smt/mosesdecoder.git
+
 # 5. Train
 torchrun --nproc_per_node=2 train.py --lang hindi \
     --data-dir ./data \
     --nllb-dir ./nllb13b_local \
-    --indic-nlp ./indic_nlp_library
+    --indic-nlp ./indic_nlp_library \
+    --moses ./mosesdecoder/scripts/generic/multi-bleu.perl
 
 # 6. Evaluate
 python evaluate.py \
@@ -42,6 +46,7 @@ python evaluate.py \
     --data-dir ./data \
     --nllb-dir ./nllb13b_local \
     --indic-nlp ./indic_nlp_library \
+    --moses ./mosesdecoder/scripts/generic/multi-bleu.perl \
     --splits test challenge
 ```
 
@@ -256,6 +261,27 @@ sudo apt-get install -y build-essential perl
 
 ---
 
+### Step 4.5 — Download Moses Decoder (for BLEU Evaluation)
+
+Moses multi-bleu.perl is the official WAT evaluation metric. Download it:
+
+```bash
+git clone https://github.com/moses-smt/mosesdecoder.git
+```
+
+The script will be located at: `mosesdecoder/scripts/generic/multi-bleu.perl`
+
+**Verify download:**
+
+```bash
+ls mosesdecoder/scripts/generic/multi-bleu.perl
+# Should exist
+```
+
+This is **required for both training** (dev BLEU evaluation during training) **and evaluation**.
+
+---
+
 ### Step 5 — Train
 
 All paths are **fully customizable** via command-line arguments. Use defaults if files are in repo root; override if they're elsewhere.
@@ -275,7 +301,8 @@ python train.py --lang hindi \
 torchrun --nproc_per_node=2 train.py --lang hindi \
     --data-dir ./data \
     --nllb-dir ./nllb13b_local \
-    --indic-nlp ./indic_nlp_library
+    --indic-nlp ./indic_nlp_library \
+    --moses ./mosesdecoder/scripts/generic/multi-bleu.perl
 ```
 
 **Custom paths (if files are in different locations):**
@@ -285,6 +312,7 @@ torchrun --nproc_per_node=2 train.py --lang hindi \
     --data-dir /path/to/hindi-visual-genome-11 \
     --nllb-dir /path/to/nllb13b_local \
     --indic-nlp /path/to/indic_nlp_library \
+    --moses /path/to/multi-bleu.perl \
     --work-dir /path/to/output
 ```
 
@@ -296,6 +324,7 @@ torchrun --nproc_per_node=2 train.py --lang hindi \
 | `--data-dir` | `./data` | `/data/vg` | Dataset directory with TSV files |
 | `--nllb-dir` | `./nllb13b_local` | `/models/nllb` | NLLB-1.3B weights directory |
 | `--indic-nlp` | `./indic_nlp_library` | `/lib/indic` | Indic NLP Library directory |
+| `--moses` | `./mosesdecoder/scripts/generic/multi-bleu.perl` | `/path/to/multi-bleu.perl` | Moses evaluation script (required) |
 | `--work-dir` | `runs/{lang}` | `/output/hindi` | Checkpoint output directory |
 | `--resume-from` | 0 | `15` | Resume from epoch (0=fresh) |
 | `--resume-ckpt` | None | `/path/to/ckpt.pt` | Load weights from checkpoint |
@@ -334,6 +363,7 @@ python evaluate.py \
     --data-dir ./data \
     --nllb-dir ./nllb13b_local \
     --indic-nlp ./indic_nlp_library \
+    --moses ./mosesdecoder/scripts/generic/multi-bleu.perl \
     --splits test challenge
 ```
 
@@ -346,6 +376,7 @@ python evaluate.py \
     --data-dir /path/to/hindi-visual-genome-11 \
     --nllb-dir /path/to/nllb13b_local \
     --indic-nlp /path/to/indic_nlp_library \
+    --moses /path/to/multi-bleu.perl \
     --splits test challenge
 ```
 
@@ -358,6 +389,7 @@ python evaluate.py \
 | `--data-dir` | `./data` | Dataset directory |
 | `--nllb-dir` | `./nllb13b_local` | NLLB-1.3B weights directory |
 | `--indic-nlp` | `./indic_nlp_library` | Indic NLP Library directory |
+| `--moses` | `./mosesdecoder/scripts/generic/multi-bleu.perl` | Moses evaluation script (required) |
 | `--splits` | `test challenge` | Splits to evaluate: `dev test challenge` |
 | `--out-dir` | (repo root) | Directory to save results JSON |
 
