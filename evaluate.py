@@ -15,19 +15,9 @@ Usage:
 import os
 import sys
 
-# Fix GLIBCXX_3.4.29 missing on older systems.
-# Re-exec with the correct LD_LIBRARY_PATH before any native libs are loaded.
+# Fix GLIBCXX_3.4.29 missing on older systems (if needed).
+# Users can manually set LD_LIBRARY_PATH before running if required.
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_LIBSTDCXX_CANDIDATES = [
-    "/home/abhishara_iitp/.conda/envs/bclm/lib",
-    "/home/abhishara_iitp/.conda/envs/vg/lib",
-]
-if not os.environ.get("_GLIBCXX_FIXED"):
-    for _lib in _LIBSTDCXX_CANDIDATES:
-        if os.path.isdir(_lib):
-            os.environ["LD_LIBRARY_PATH"] = _lib + ":" + os.environ.get("LD_LIBRARY_PATH", "")
-            os.environ["_GLIBCXX_FIXED"] = "1"
-            os.execv(sys.executable, [sys.executable] + sys.argv)
 
 import argparse
 import json
@@ -86,6 +76,7 @@ def main():
     parser.add_argument("--data-dir",  required=True, help="Path to visual genome dataset dir")
     parser.add_argument("--nllb-dir",  default=os.path.join(HERE, "nllb13b_local"))
     parser.add_argument("--ribes",     default=os.path.join(HERE, "RIBES.py"))
+    parser.add_argument("--moses",     default=os.path.join(HERE, "mosesdecoder/scripts/generic/multi-bleu.perl"))
     parser.add_argument("--indic-nlp", default=os.path.join(HERE, "indic_nlp_library"))
     parser.add_argument("--splits",    nargs="+", default=["test", "challenge"],
                         choices=["dev", "test", "challenge"])
@@ -98,6 +89,7 @@ def main():
         nllb13b_local = args.nllb_dir,
         work_dir      = args.out_dir,
         ribes_script  = args.ribes,
+        moses_script  = args.moses,
         indic_nlp_dir = args.indic_nlp,
     )
 

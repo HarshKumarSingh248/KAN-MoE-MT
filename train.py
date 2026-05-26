@@ -14,18 +14,9 @@ Multi-GPU:
 Best model saved to: {work_dir}/best_model.pt
 """
 
-# ── GLIBCXX fix: re-exec with correct LD_LIBRARY_PATH before any native libs load ──
+# Note: If you encounter GLIBCXX errors, set LD_LIBRARY_PATH before running:
+# export LD_LIBRARY_PATH=/path/to/conda/env/lib:$LD_LIBRARY_PATH
 import os, sys, warnings
-_LIBSTDCXX_CANDIDATES = [
-    "/home/abhishara_iitp/.conda/envs/bclm/lib",
-    "/home/abhishara_iitp/.conda/envs/vg/lib",
-]
-if not os.environ.get("_GLIBCXX_FIXED"):
-    for _lib in _LIBSTDCXX_CANDIDATES:
-        if os.path.isdir(_lib):
-            os.environ["LD_LIBRARY_PATH"] = _lib + ":" + os.environ.get("LD_LIBRARY_PATH", "")
-            os.environ["_GLIBCXX_FIXED"] = "1"
-            os.execv(sys.executable, [sys.executable] + sys.argv)
 
 warnings.filterwarnings("ignore", message=".*tie.*word.*embeddings.*")
 warnings.filterwarnings("ignore", message=".*tied weights.*")
@@ -65,6 +56,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _DATA_DIR    = os.path.join(_HERE, "data")
 _NLLB13B_DIR = os.path.join(_HERE, "nllb13b_local")
 _RIBES       = os.path.join(_HERE, "RIBES.py")
+_MOSES       = os.path.join(_HERE, "mosesdecoder/scripts/generic/multi-bleu.perl")
 _INDIC_NLP   = os.path.join(_HERE, "indic_nlp_library")
 
 _WORK_DIR_HINDI   = os.path.join(_HERE, "runs", "hindi")
@@ -404,6 +396,8 @@ if __name__ == "__main__":
                         help=f"Path to indic_nlp_library directory (default: {_INDIC_NLP})")
     parser.add_argument("--ribes", type=str, default=_RIBES,
                         help=f"Path to RIBES.py script (default: {_RIBES})")
+    parser.add_argument("--moses", type=str, default=_MOSES,
+                        help=f"Path to Moses multi-bleu.perl script (default: {_MOSES})")
     parser.add_argument("--resume-from", type=int, default=0,
                         help="Resume after this epoch (e.g. 7 resumes from epoch 8)")
     parser.add_argument("--resume-ckpt", type=str, default=None,
@@ -429,6 +423,7 @@ if __name__ == "__main__":
         nllb13b_local=args.nllb_dir,
         work_dir=work_dir,
         ribes_script=args.ribes,
+        moses_script=args.moses,
         indic_nlp_dir=args.indic_nlp,
     )
 
@@ -449,6 +444,8 @@ if __name__ == "__main__":
         missing.append(("nllb13b_local", cfg.nllb13b_local, "huggingface-cli download facebook/nllb-200-1.3B --repo-type model --local-dir nllb13b_local"))
     if not os.path.isdir(cfg.indic_nlp_dir):
         missing.append(("indic_nlp_dir", cfg.indic_nlp_dir, "git clone https://github.com/indicnlp/indic_nlp_library.git && cd indic_nlp_library && git clone https://github.com/indicnlp/indic_nlp_resources.git && python setup.py install"))
+    if not os.path.isfile(cfg.moses_script):
+        missing.append(("moses_script", cfg.moses_script, "git clone https://github.com/moses-smt/mosesdecoder.git && find mosesdecoder/scripts/generic -name multi-bleu.perl"))
 
     if missing:
         print("\n" + "=" * 80)
@@ -467,6 +464,9 @@ if __name__ == "__main__":
             elif name == "indic_nlp_dir":
                 print(f"      1. Run: {cmd}")
                 print(f"      2. Or override with: python train.py --indic-nlp /path/to/indic_nlp_library")
+            elif name == "moses_script":
+                print(f"      1. Run: {cmd}")
+                print(f"      2. Or override with: python train.py --moses /path/to/multi-bleu.perl")
             print()
         print("=" * 80)
         sys.exit(1)

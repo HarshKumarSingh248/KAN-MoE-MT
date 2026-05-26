@@ -19,6 +19,7 @@ class CFG:
     work_dir: str = ""
 
     ribes_script: str = ""
+    moses_script: str = ""
     indic_nlp_dir: str = ""
 
     d_model: int = 1024
@@ -52,7 +53,7 @@ class CFG:
 
 
 def get_cfg(lang: str, data_dir: str, nllb13b_local: str,
-            work_dir: str, ribes_script: str, indic_nlp_dir: str) -> CFG:
+            work_dir: str, ribes_script: str, moses_script: str, indic_nlp_dir: str) -> CFG:
     if lang == "hindi":
         cfg = CFG(
             lang="hindi",
@@ -74,5 +75,6 @@ def get_cfg(lang: str, data_dir: str, nllb13b_local: str,
     cfg.nllb13b_local  = nllb13b_local
     cfg.work_dir       = work_dir
     cfg.ribes_script   = ribes_script
+    cfg.moses_script   = moses_script
     cfg.indic_nlp_dir  = indic_nlp_dir
     return cfg

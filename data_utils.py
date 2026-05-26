@@ -279,9 +279,6 @@ def wat_tok(text: str, lang_code: str, indic_nlp_dir: str) -> str:
 
 # ── BLEU via Moses multi-bleu.perl (WAT evaluation protocol) ─────────────────
 
-_MOSES_MULTI_BLEU = "/home/abhishara_iitp/mosesdecoder-RELEASE-2.1.1/scripts/generic/multi-bleu.perl"
-
-
 def compute_bleu(hyps: list[str], refs: list[str], cfg) -> float:
     ht = [wat_tok(h, cfg.lang_code, cfg.indic_nlp_dir) for h in hyps]
     rt = [wat_tok(r, cfg.lang_code, cfg.indic_nlp_dir) for r in refs]
@@ -297,7 +294,7 @@ def compute_bleu(hyps: list[str], refs: list[str], cfg) -> float:
             # multi-bleu.perl -lc matches the official WAT evaluation protocol
             with open(hyp_f) as hyp_in:
                 result = subprocess.run(
-                    ["perl", _MOSES_MULTI_BLEU, "-lc", ref_f],
+                    ["perl", cfg.moses_script, "-lc", ref_f],
                     stdin=hyp_in, capture_output=True, text=True, timeout=180,
                 )
             # Output format: BLEU = 12.34, ...
